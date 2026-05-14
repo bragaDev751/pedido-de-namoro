@@ -68,7 +68,6 @@ export default function PedidoPage() {
   const frasesEngracadas = ["Quase!", "Tente outra vez", "Ih, errou", "Nem tenta", "Caminho errado", "Apenas SIM!"];
 
   const fogeBotao = () => {
-    // Valores de fuga ligeiramente reduzidos no mobile para garantir que o botão não saia completamente da tela
     const limiteX = window.innerWidth < 768 ? 100 : 260;
     const limiteY = window.innerHeight < 768 ? 100 : 260;
 
@@ -128,7 +127,6 @@ export default function PedidoPage() {
             <Heart className="text-pink-500 w-12 h-12 md:w-20 md:h-20 mx-auto" fill="#ec4899" />
           </motion.div>
           
-          {/* Nome de vocês dois estilizado e ultra-responsivo */}
           <h1 className="text-4xl sm:text-5xl md:text-8xl font-black tracking-tight leading-none py-2 flex flex-col items-center justify-center gap-1 md:gap-3">
             <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-zinc-200 to-zinc-400">GABRIEL</span>
             <span className="text-pink-500 text-2xl md:text-5xl my-1 animate-pulse">&</span>
@@ -142,8 +140,8 @@ export default function PedidoPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-pink-500/5 via-transparent to-transparent pointer-events-none" />
       </section>
 
-      {/* Galeria de Fotos Interativa */}
-      <section className="max-w-6xl mx-auto py-12 md:py-20 px-6 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 relative z-10">
+      {/* Galeria de Fotos Interativa - Atualizada para o Mobile */}
+      <section className="max-w-5xl mx-auto py-16 px-4 grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
         {[
           { file: "foto1.jpeg", date: "O Começo", cap: "Aquele brilho nos olhos que só você me dá." },
           { file: "foto2.jpeg", date: "Cumplicidade", cap: "Onde a gente se entende sem falar nada." },
@@ -155,21 +153,21 @@ export default function PedidoPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.8, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
-            whileHover={{ y: -6, scale: 1.01 }}
-            className="relative bg-zinc-900/40 p-3 md:p-4 rounded-3xl border border-white/5 backdrop-blur-md shadow-2xl transition-all hover:border-pink-500/20 group cursor-pointer"
+            whileHover={{ y: -8, scale: 1.02 }}
+            className="relative bg-zinc-900/60 p-4 rounded-3xl border border-zinc-800 backdrop-blur-md shadow-2xl transition-all hover:border-pink-500/30 group cursor-pointer"
           >
-            {/* H-350px no mobile garante uma navegação de scroll confortável em celulares */}
-            <div className="overflow-hidden rounded-2xl h-[350px] md:h-[450px] relative">
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-50 group-hover:opacity-30 transition-opacity z-10" />
+            {/* aspect-[3/4] preserva proporções normais de fotos verticais de smartphones sem esticar */}
+            <div className="overflow-hidden rounded-2xl w-full aspect-[3/4] relative bg-zinc-950">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity z-10" />
               <img 
                 src={`/${item.file}`} 
                 alt="Nossa foto" 
-                className="w-full h-full object-cover transition-transform duration-700 md:group-hover:scale-105"
+                className="w-full h-full object-cover object-center transition-transform duration-700 md:group-hover:scale-105"
               />
             </div>
-            <div className="mt-4 space-y-1 text-left px-1">
+            <div className="mt-4 space-y-2 text-left px-1">
               <span className="text-pink-400 text-[11px] font-mono flex items-center gap-2 font-bold tracking-wider uppercase">
-                <Calendar size={12} className="text-pink-500" /> {item.date}
+                <Calendar size={13} className="text-pink-500" /> {item.date}
               </span>
               <p className="text-zinc-300 italic font-light text-sm md:text-base leading-relaxed">
                 “{item.cap}”
@@ -179,25 +177,29 @@ export default function PedidoPage() {
         ))}
       </section>
 
-      {/* Spotify Section */}
-      <section className="py-12 md:py-20 flex flex-col items-center px-6 relative z-10">
-        <div className="w-full max-w-xl bg-zinc-900/30 border border-white/5 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-3xl">
+      {/* Spotify Section - CORRIGIDA COM PLAYER OFICIAL */}
+      <section className="py-12 md:py-20 flex flex-col items-center px-4 relative z-10">
+        <div className="w-full max-w-xl bg-zinc-900/30 border border-zinc-800 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-3xl">
           <div className="flex items-center justify-center gap-2 mb-5">
             <Music className="text-green-400 animate-bounce" size={18} />
             <h3 className="text-[10px] md:text-xs font-mono tracking-[0.25em] uppercase text-zinc-400 font-bold">Nossa Trilha Sonora</h3>
           </div>
           
-          <div className="rounded-2xl overflow-hidden shadow-2xl bg-[#282828] border border-zinc-800">
+          <div className="rounded-2xl overflow-hidden shadow-2xl bg-[#282828] border border-zinc-800 h-[80px]">
+            {/* URL oficial de embed do Spotify funcionando perfeitamente */}
             <iframe 
-              src="http://googleusercontent.com/spotify.com/4" 
+              src="https://open.spotify.com/embed/track/4PTG3Z6ehGkBF2zI7YgR73?utm_source=generator&theme=0" 
               width="100%" 
-              height="152" 
+              height="80" 
               frameBorder="0" 
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
               loading="lazy"
               title="Spotify Player"
             />
           </div>
+          <p className="text-center text-[9px] text-zinc-500 mt-3 font-mono">
+            💡 Dica: Mude o código final da URL acima no seu editor para colocar a música de vocês!
+          </p>
         </div>
       </section>
 
@@ -221,7 +223,6 @@ export default function PedidoPage() {
                 Então, Lívia... <br className="hidden sm:block" />aceita namorar comigo?
               </h2>
               
-              {/* Layout de botões adaptável e otimizado para área de toque em smartphones */}
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-center min-h-[140px] relative max-w-xs sm:max-w-md mx-auto w-full">
                 <button 
                   onClick={handleYes}
@@ -234,7 +235,7 @@ export default function PedidoPage() {
                   animate={{ x: noButtonPos.x, y: noButtonPos.y }}
                   onMouseEnter={fogeBotao}
                   onTouchStart={(e) => {
-                    e.preventDefault(); // Evita cliques acidentais e zoom no mobile
+                    e.preventDefault();
                     fogeBotao();
                   }}
                   className="w-full sm:w-auto px-8 py-4 border border-zinc-800 bg-zinc-950/60 backdrop-blur-sm rounded-full text-zinc-500 text-base md:text-lg font-medium transition-colors whitespace-nowrap touch-manipulation select-none"
