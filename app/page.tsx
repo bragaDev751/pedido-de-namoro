@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Music, Calendar, Sparkles, Star } from 'lucide-react';
+import { Heart, Music, Calendar, Sparkles, Star, Play, Pause } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 // --- COMPONENTES AUXILIARES ---
@@ -58,6 +58,183 @@ function BackgroundParticles() {
   );
 }
 
+function SpotifyPlayer() {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [audioCarregado, setAudioCarregado] = useState(false);
+
+  // Carrega o áudio via Blob para evitar problemas de partição de rede (Range 416)
+  useEffect(() => {
+    async function carregarAudioRobusto() {
+      if (!audioRef.current) return;
+      try {
+        const response = await fetch('/foiassim.mp3');
+        
+        // Se der erro 404, avisa no console explicitamente sem quebrar o player
+        if (!response.ok) {
+          console.error("ALERTA: O arquivo 'foiassim.mp3' não foi encontrado na pasta public!");
+          return;
+        }
+        
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        if (audioRef.current) {
+          audioRef.current.src = blobUrl;
+          audioRef.current.load();
+          setAudioCarregado(true);
+        }
+      } catch (err) {
+        console.warn("Fallback para streaming padrão devido a restrições de CORS:", err);
+        if (audioRef.current) {
+          audioRef.current.src = '/foiassim.mp3';
+          setAudioCarregado(true);
+        }
+      }
+    }
+
+    carregarAudioRobusto();
+  }, []);
+
+  const togglePlay = async () => {
+    if (!audioRef.current) return;
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      // Impede o play se o arquivo não tiver sido localizado no servidor (evita o NotSupportedError)
+      if (!audioCarregado && audioRef.current.readyState === 0) {
+        alert("O áudio ainda está sendo carregado ou não foi encontrado na pasta public.");
+        return;
+      }
+
+      try {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      } catch (err) {
+        console.error("Erro ao reproduzir mídia:", err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateTime = () => setCurrentTime(audio.currentTime);
+    const updateDuration = () => {
+      if (audio.duration && !isNaN(audio.duration)) {
+        setDuration(audio.duration);
+      }
+    };
+    const handleAudioEnd = () => setIsPlaying(false);
+
+    audio.addEventListener('timeupdate', updateTime);
+    audio.addEventListener('loadedmetadata', updateDuration);
+    audio.addEventListener('durationchange', updateDuration);
+    audio.addEventListener('ended', handleAudioEnd);
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateTime);
+      audio.removeEventListener('loadedmetadata', updateDuration);
+      audio.removeEventListener('durationchange', updateDuration);
+      audio.removeEventListener('ended', handleAudioEnd);
+    };
+  }, []);
+
+  const formatTime = (time: number) => {
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!audioRef.current) return;
+    const newTime = parseFloat(e.target.value);
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+  };
+
+  const progressPercent = duration ? (currentTime / duration) * 100 : 0;
+
+  return (
+    <div className="w-full max-w-[340px] bg-[#121212] border border-zinc-800 p-5 rounded-3xl shadow-2xl flex flex-col items-center gap-5">
+      <audio ref={audioRef} preload="auto" crossOrigin="anonymous" loop />
+
+      {/* Foto Quadrada do Casal */}
+      <div className="w-full aspect-square rounded-2xl overflow-hidden shadow-inner bg-zinc-900 relative group">
+        <img 
+          src="/capa.png" 
+          alt="Foto do Casal" 
+          className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "/foto1.jpeg";
+          }}
+        />
+      </div>
+
+      {/* Título da Música */}
+      <div className="w-full flex flex-col text-left px-1">
+        <span className="text-white font-black text-xl tracking-tight truncate">Foi Assim</span>
+        <span className="text-zinc-400 text-sm font-medium mt-0.5 truncate">Sorriso Maroto</span>
+      </div>
+
+      {/* Ondas do Spotify */}
+      <div className="w-full flex items-center justify-center gap-[3px] h-7 px-2 opacity-80 my-1">
+        {[4, 2, 6, 3, 5, 7, 4, 8, 5, 2, 6, 3, 4, 7, 5, 8, 4, 2, 6, 3, 5, 4].map((h, i) => (
+          <motion.div
+            key={i}
+            className="w-[3px] bg-white rounded-full"
+            style={{ height: `${h * 3}px` }}
+            animate={isPlaying ? {
+              height: [`${h * 2}px`, `${h * 4.5}px`, `${h * 2}px`]
+            } : { height: `${h * 3}px` }}
+            transition={{
+              duration: 0.6,
+              repeat: Infinity,
+              delay: i * 0.03,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Barra de Progresso */}
+      <div className="w-full flex flex-col gap-1.5 px-1">
+        <div className="flex items-center gap-3 w-full text-[11px] text-zinc-400 font-mono">
+          <span>{formatTime(currentTime)}</span>
+          <input 
+            type="range" 
+            min="0" 
+            max={duration || 100} 
+            value={currentTime}
+            onChange={handleProgressChange}
+            className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-[#1db954] hover:accent-[#1ed760]"
+            style={{
+              backgroundImage: `linear-gradient(to right, #1db954 0%, #1db954 ${progressPercent}%, #27272a ${progressPercent}%, #27272a 100%)`
+            } as React.CSSProperties}
+          />
+          <span>{formatTime(duration)}</span>
+        </div>
+      </div>
+
+      {/* Botão Play / Pause */}
+      <div className="flex items-center justify-center mt-1">
+        <button 
+          onClick={togglePlay}
+          className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-black hover:scale-105 transition-transform active:scale-95 shadow-lg"
+        >
+          {isPlaying ? <Pause size={24} fill="black" /> : <Play size={24} fill="black" className="ml-1" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // --- PÁGINA PRINCIPAL ---
 
 export default function PedidoPage() {
@@ -105,7 +282,6 @@ export default function PedidoPage() {
 
   return (
     <main className="min-h-screen bg-[#030303] text-white overflow-x-hidden selection:bg-pink-500 font-sans relative">
-      {/* Grid de fundo premium suave */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f1f1f_1px,transparent_1px),linear-gradient(to_bottom,#1f1f1f_1px,transparent_1px)] bg-[size:3rem_3rem] md:bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none opacity-15" />
       
       <CustomCursor />
@@ -140,7 +316,7 @@ export default function PedidoPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-pink-500/5 via-transparent to-transparent pointer-events-none" />
       </section>
 
-      {/* Galeria de Fotos Interativa - Atualizada para o Mobile */}
+      {/* Galeria de Fotos Interativa */}
       <section className="max-w-5xl mx-auto py-16 px-4 grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
         {[
           { file: "foto1.jpeg", date: "O Começo", cap: "Aquele brilho nos olhos que só você me dá." },
@@ -156,7 +332,6 @@ export default function PedidoPage() {
             whileHover={{ y: -8, scale: 1.02 }}
             className="relative bg-zinc-900/60 p-4 rounded-3xl border border-zinc-800 backdrop-blur-md shadow-2xl transition-all hover:border-pink-500/30 group cursor-pointer"
           >
-            {/* aspect-[3/4] preserva proporções normais de fotos verticais de smartphones sem esticar */}
             <div className="overflow-hidden rounded-2xl w-full aspect-[3/4] relative bg-zinc-950">
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity z-10" />
               <img 
@@ -177,30 +352,13 @@ export default function PedidoPage() {
         ))}
       </section>
 
-      {/* Spotify Section - CORRIGIDA COM PLAYER OFICIAL */}
-      <section className="py-12 md:py-20 flex flex-col items-center px-4 relative z-10">
-        <div className="w-full max-w-xl bg-zinc-900/30 border border-zinc-800 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-3xl">
-          <div className="flex items-center justify-center gap-2 mb-5">
-            <Music className="text-green-400 animate-bounce" size={18} />
-            <h3 className="text-[10px] md:text-xs font-mono tracking-[0.25em] uppercase text-zinc-400 font-bold">Nossa Trilha Sonora</h3>
-          </div>
-          
-          <div className="rounded-2xl overflow-hidden shadow-2xl bg-[#282828] border border-zinc-800 h-[80px]">
-            {/* URL oficial de embed do Spotify funcionando perfeitamente */}
-            <iframe 
-              src="https://open.spotify.com/embed/track/4PTG3Z6ehGkBF2zI7YgR73?utm_source=generator&theme=0" 
-              width="100%" 
-              height="80" 
-              frameBorder="0" 
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
-              loading="lazy"
-              title="Spotify Player"
-            />
-          </div>
-          <p className="text-center text-[9px] text-zinc-500 mt-3 font-mono">
-            💡 Dica: Mude o código final da URL acima no seu editor para colocar a música de vocês!
-          </p>
+      {/* Seção da Música */}
+      <section className="py-12 flex flex-col items-center px-4 relative z-10">
+        <div className="flex items-center justify-center gap-2 mb-5">
+          <Music className="text-green-400 animate-bounce" size={18} />
+          <h3 className="text-[10px] md:text-xs font-mono tracking-[0.25em] uppercase text-zinc-400 font-bold">Nossa Trilha Sonora</h3>
         </div>
+        <SpotifyPlayer />
       </section>
 
       {/* O Gran Finale */}
