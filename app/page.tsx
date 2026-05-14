@@ -65,14 +65,12 @@ function SpotifyPlayer() {
   const [duration, setDuration] = useState(0);
   const [audioCarregado, setAudioCarregado] = useState(false);
 
-  // Carrega o áudio via Blob para evitar problemas de partição de rede (Range 416)
   useEffect(() => {
     async function carregarAudioRobusto() {
       if (!audioRef.current) return;
       try {
         const response = await fetch('/foiassim.mp3');
         
-        // Se der erro 404, avisa no console explicitamente sem quebrar o player
         if (!response.ok) {
           console.error("ALERTA: O arquivo 'foiassim.mp3' não foi encontrado na pasta public!");
           return;
@@ -180,7 +178,7 @@ function SpotifyPlayer() {
       {/* Título da Música */}
       <div className="w-full flex flex-col text-left px-1">
         <span className="text-white font-black text-xl tracking-tight truncate">Foi Assim</span>
-        <span className="text-zinc-400 text-sm font-medium mt-0.5 truncate">Sorriso Maroto</span>
+        <span className="text-zinc-400 text-sm font-medium mt-0.5 truncate">SOTAM</span>
       </div>
 
       {/* Ondas do Spotify */}
